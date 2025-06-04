@@ -211,7 +211,7 @@
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.3);
-        position: relative;
+        position: absolute;
         z-index: 10;
         -webkit-tap-highlight-color: transparent;
         will-change: transform;
@@ -235,19 +235,19 @@
       }
 
       .disk.selected {
-        transform: translateY(-15px) scale(1.1);
+        transform: translateX(-50%) translateY(-15px) scale(1.1);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
         z-index: 100;
         animation: pulse 1.5s infinite ease-in-out;
       }
 
       .disk.tap-feedback {
-        transform: translateY(-5px) scale(1.05);
+        transform: translateX(-50%) translateY(-5px) scale(1.05);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
       }
 
       .disk:active {
-        transform: translateY(-3px) scale(1.02);
+        transform: translateX(-50%) translateY(-3px) scale(1.02);
       }
 
       .win-message {
@@ -359,7 +359,15 @@
         }
 
         .disk.selected {
-          transform: translateY(-12px) scale(1.08);
+          transform: translateX(-50%) translateY(-12px) scale(1.08);
+        }
+
+        .disk.tap-feedback {
+          transform: translateX(-50%) translateY(-3px) scale(1.03);
+        }
+
+        .disk:active {
+          transform: translateX(-50%) translateY(-2px) scale(1.01);
         }
 
         .stats {
@@ -425,7 +433,15 @@
         }
 
         .disk.selected {
-          transform: translateY(-10px) scale(1.06);
+          transform: translateX(-50%) translateY(-10px) scale(1.06);
+        }
+
+        .disk.tap-feedback {
+          transform: translateX(-50%) translateY(-2px) scale(1.02);
+        }
+
+        .disk:active {
+          transform: translateX(-50%) translateY(-1px) scale(1.01);
         }
 
         .difficulty-btn {
@@ -483,6 +499,10 @@
         .disk {
           height: 18px;
           border-radius: 9px;
+        }
+
+        .disk.selected {
+          transform: translateX(-50%) translateY(-8px) scale(1.04);
         }
 
         .difficulty-btn {
@@ -653,7 +673,35 @@
         return minWidth + (maxWidth - minWidth) * (size / maxSize);
       }
 
-      // Render all disks on rods with enhanced mobile positioning
+      // Get base position for disk placement
+      function getBasePosition() {
+        const screenWidth = window.innerWidth;
+        if (screenWidth <= 360) {
+          return 30;
+        } else if (screenWidth <= 480) {
+          return 35;
+        } else if (screenWidth <= 768) {
+          return 40;
+        } else {
+          return 45;
+        }
+      }
+
+      // Get disk spacing
+      function getDiskSpacing() {
+        const screenWidth = window.innerWidth;
+        if (screenWidth <= 360) {
+          return 17;
+        } else if (screenWidth <= 480) {
+          return 19;
+        } else if (screenWidth <= 768) {
+          return 21;
+        } else {
+          return 25;
+        }
+      }
+
+      // Render all disks on rods with proper mobile positioning
       function renderDisks() {
         const rods = document.querySelectorAll(".rod");
 
@@ -665,9 +713,15 @@
           // Add disks from bottom to top
           const rodDisks = gameState.rods[rodIndex];
           const diskHeight =
-            window.innerWidth <= 480 ? 20 : window.innerWidth <= 768 ? 22 : 25;
-          const diskSpacing =
-            window.innerWidth <= 480 ? 19 : window.innerWidth <= 768 ? 21 : 27;
+            window.innerWidth <= 360
+              ? 18
+              : window.innerWidth <= 480
+              ? 20
+              : window.innerWidth <= 768
+              ? 22
+              : 25;
+          const diskSpacing = getDiskSpacing();
+          const basePosition = getBasePosition();
 
           rodDisks.forEach((diskSize, diskIndex) => {
             const disk = document.createElement("div");
@@ -678,7 +732,7 @@
             disk.style.background =
               diskColors[(diskSize - 1) % diskColors.length];
             disk.style.position = "absolute";
-            disk.style.bottom = 30 + diskIndex * diskSpacing + "px";
+            disk.style.bottom = basePosition + diskIndex * diskSpacing + "px";
             disk.style.left = "50%";
             disk.style.transform = "translateX(-50%)";
             disk.dataset.size = diskSize;
@@ -940,23 +994,24 @@
           });
         });
 
-        // Clear selection when clicking/touching outside
+        // Clear selection when clicking outside
         document.addEventListener("click", (e) => {
-          if (!e.target.closest(".rod") && !gameState.isMobile) {
+          if (!e.target.closest(".rod") && !e.target.closest(".disk")) {
             clearSelection();
           }
         });
 
-        document.addEventListener("touchend", (e) => {
-          if (!e.target.closest(".rod") && gameState.isMobile) {
-            clearSelection();
-          }
-        });
+        // Enhanced touch event for clearing selection on mobile
+        if (gameState.isMobile) {
+          document.addEventListener("touchend", (e) => {
+            if (!e.target.closest(".rod") && !e.target.closest(".disk")) {
+              clearSelection();
+            }
+          });
+        }
 
-        // Keyboard support (desktop only)
+        // Keyboard support for accessibility
         document.addEventListener("keydown", (e) => {
-          if (gameState.isMobile) return;
-
           if (e.key >= "1" && e.key <= "3") {
             const rodIndex = parseInt(e.key) - 1;
             handleRodClick(rodIndex);
@@ -968,33 +1023,128 @@
           }
         });
 
-        // Handle orientation changes on mobile
-        window.addEventListener("orientationchange", () => {
-          setTimeout(() => {
+        // Handle window resize for responsive design
+        let resizeTimeout;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
             updateDisplay();
           }, 100);
         });
 
-        // Handle window resize
-        window.addEventListener("resize", () => {
-          updateDisplay();
-        });
+        // Prevent context menu on long press for mobile
+        if (gameState.isMobile) {
+          document.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+          });
+
+          // Prevent zoom on double tap
+          document.addEventListener("touchend", (e) => {
+            const now = new Date().getTime();
+            const timeSince = now - gameState.lastTouchEnd;
+
+            if (timeSince < 300 && timeSince > 0) {
+              e.preventDefault();
+            }
+
+            gameState.lastTouchEnd = now;
+          });
+        }
       }
 
-      // Initialize the game on page load
-      document.addEventListener("DOMContentLoaded", () => {
-        // Prevent zoom on iOS
-        document.addEventListener(
-          "touchmove",
-          (e) => {
-            if (e.scale !== 1) e.preventDefault();
-          },
-          { passive: false }
+      // Optimize performance for mobile devices
+      function optimizeForMobile() {
+        if (gameState.isMobile) {
+          // Add touch-action CSS to prevent default behaviors
+          document.body.style.touchAction = "manipulation";
+
+          // Disable text selection on mobile
+          document.body.style.webkitUserSelect = "none";
+          document.body.style.userSelect = "none";
+
+          // Add viewport meta tag if not present
+          if (!document.querySelector('meta[name="viewport"]')) {
+            const viewport = document.createElement("meta");
+            viewport.name = "viewport";
+            viewport.content =
+              "width=device-width, initial-scale=1.0, user-scalable=no";
+            document.head.appendChild(viewport);
+          }
+        }
+      }
+
+      // Auto-solve feature (for demonstration/hints)
+      function getOptimalSolution(
+        n,
+        source = 0,
+        destination = 2,
+        auxiliary = 1
+      ) {
+        if (n === 1) {
+          return [[source, destination]];
+        }
+
+        const moves = [];
+        moves.push(
+          ...getOptimalSolution(n - 1, source, auxiliary, destination)
+        );
+        moves.push([source, destination]);
+        moves.push(
+          ...getOptimalSolution(n - 1, auxiliary, destination, source)
         );
 
-        initializeGame(4);
+        return moves;
+      }
+
+      // Hint system
+      function getNextHint() {
+        const solution = getOptimalSolution(gameState.diskCount);
+        const currentMoves = [];
+
+        // This would need to track actual game state to provide real hints
+        // For now, just show the first move as an example
+        if (gameState.moves === 0) {
+          return solution[0];
+        }
+
+        return null;
+      }
+
+      // Initialize everything when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        optimizeForMobile();
         setupEventListeners();
+        initializeGame(4); // Start with medium difficulty
+
+        // Add game state property for touch timing
+        gameState.lastTouchEnd = 0;
+
+        // Focus management for accessibility
+        document.body.setAttribute("tabindex", "0");
+
+        // Prevent scrolling when playing on mobile
+        if (gameState.isMobile) {
+          document.body.addEventListener(
+            "touchmove",
+            (e) => {
+              if (e.target.closest(".game-container")) {
+                e.preventDefault();
+              }
+            },
+            { passive: false }
+          );
+        }
+
+        console.log("Tower of Hanoi initialized successfully!");
       });
+
+      // Export game functions for potential external use
+      window.HanoiGame = {
+        reset: () => initializeGame(gameState.diskCount),
+        setDifficulty: (disks) => initializeGame(disks),
+        getState: () => ({ ...gameState }),
+        getHint: getNextHint,
+      };
     </script>
   </body>
 </html>
