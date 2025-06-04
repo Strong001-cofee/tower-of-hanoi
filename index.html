@@ -22,6 +22,7 @@
         color: white;
         user-select: none;
         touch-action: manipulation;
+        overflow-x: hidden;
       }
 
       .header {
@@ -45,6 +46,7 @@
         display: flex;
         gap: 10px;
         align-items: center;
+        flex-wrap: wrap;
       }
 
       .difficulty-selector {
@@ -57,11 +59,16 @@
         background: rgba(255, 255, 255, 0.2);
         border: 2px solid rgba(255, 255, 255, 0.3);
         color: white;
-        padding: 8px 12px;
+        padding: 10px 14px;
         border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
+        font-weight: 500;
         transition: all 0.3s ease;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .difficulty-btn.active {
@@ -70,8 +77,10 @@
         transform: scale(1.05);
       }
 
-      .difficulty-btn:hover {
+      .difficulty-btn:hover,
+      .difficulty-btn:active {
         background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.02);
       }
 
       .reset-btn {
@@ -85,9 +94,14 @@
         font-weight: bold;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-      .reset-btn:hover {
+      .reset-btn:hover,
+      .reset-btn:active {
         background: #ff5252;
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -112,6 +126,7 @@
         align-items: flex-end;
         height: 100%;
         position: relative;
+        gap: 10px;
       }
 
       .rod {
@@ -122,6 +137,8 @@
         transition: all 0.3s ease;
         position: relative;
         width: 120px;
+        min-height: 280px;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .rod.selected {
@@ -132,16 +149,31 @@
         animation: shake 0.5s ease-in-out;
       }
 
+      .rod.tap-feedback {
+        transform: scale(0.98);
+        filter: brightness(1.2);
+      }
+
       @keyframes shake {
         0%,
         100% {
           transform: translateX(0);
         }
         25% {
-          transform: translateX(-5px);
+          transform: translateX(-8px);
         }
         75% {
-          transform: translateX(5px);
+          transform: translateX(8px);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
         }
       }
 
@@ -168,29 +200,54 @@
         font-size: 18px;
         font-weight: bold;
         color: rgba(255, 255, 255, 0.8);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
       }
 
       .disk {
         height: 25px;
-        border-radius: 12px;
+        border-radius: 15px;
         margin-bottom: 2px;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         position: relative;
         z-index: 10;
+        -webkit-tap-highlight-color: transparent;
+        will-change: transform;
+      }
+
+      .disk::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.3) 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          rgba(0, 0, 0, 0.1) 100%
+        );
+        pointer-events: none;
       }
 
       .disk.selected {
-        transform: translateY(-10px) scale(1.1);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        transform: translateY(-15px) scale(1.1);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
         z-index: 100;
+        animation: pulse 1.5s infinite ease-in-out;
       }
 
-      .disk:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      .disk.tap-feedback {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .disk:active {
+        transform: translateY(-3px) scale(1.02);
       }
 
       .win-message {
@@ -209,12 +266,14 @@
         z-index: 1000;
         backdrop-filter: blur(10px);
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        max-width: 90vw;
       }
 
       .win-stats {
         margin: 15px 0;
         font-size: 18px;
         color: #ffd700;
+        line-height: 1.4;
       }
 
       .instructions {
@@ -224,35 +283,83 @@
         color: rgba(255, 255, 255, 0.8);
         max-width: 600px;
         line-height: 1.5;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       }
 
+      /* Enhanced Mobile Styles */
       @media (max-width: 768px) {
+        body {
+          padding: 15px 10px;
+        }
+
         .header {
           flex-direction: column;
           gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .controls {
+          justify-content: center;
+        }
+
+        .difficulty-selector {
+          margin-right: 0;
+          margin-bottom: 10px;
+        }
+
+        .difficulty-btn {
+          padding: 12px 16px;
+          font-size: 13px;
+          min-height: 48px;
+          border-radius: 10px;
+        }
+
+        .reset-btn {
+          padding: 14px 24px;
+          font-size: 16px;
+          min-height: 48px;
+          border-radius: 12px;
         }
 
         .game-container {
-          height: 350px;
+          height: 380px;
           padding: 30px 15px;
+          border-radius: 15px;
+        }
+
+        .rods-container {
+          gap: 5px;
         }
 
         .rod {
-          width: 90px;
+          width: 100px;
+          min-height: 300px;
         }
 
         .rod-pole {
-          height: 200px;
-          width: 6px;
+          height: 220px;
+          width: 7px;
         }
 
         .rod-base {
-          width: 80px;
-          height: 15px;
+          width: 85px;
+          height: 18px;
+        }
+
+        .rod-label {
+          font-size: 16px;
+          margin-top: 8px;
         }
 
         .disk {
-          height: 20px;
+          height: 22px;
+          border-radius: 12px;
+          margin-bottom: 1px;
+          border-width: 1.5px;
+        }
+
+        .disk.selected {
+          transform: translateY(-12px) scale(1.08);
         }
 
         .stats {
@@ -261,29 +368,161 @@
 
         .instructions {
           font-size: 14px;
+          margin-top: 15px;
+          padding: 0 10px;
+        }
+
+        .win-message {
+          font-size: 20px;
+          padding: 25px 20px;
+          border-radius: 15px;
+        }
+
+        .win-stats {
+          font-size: 16px;
         }
       }
 
       @media (max-width: 480px) {
+        body {
+          padding: 10px 5px;
+        }
+
         .game-container {
-          height: 300px;
+          height: 320px;
           padding: 20px 10px;
+          border-radius: 12px;
+        }
+
+        .rods-container {
+          gap: 2px;
         }
 
         .rod {
+          width: 85px;
+          min-height: 260px;
+        }
+
+        .rod-pole {
+          height: 180px;
+          width: 6px;
+        }
+
+        .rod-base {
           width: 70px;
+          height: 15px;
+        }
+
+        .rod-label {
+          font-size: 14px;
+          margin-top: 6px;
+        }
+
+        .disk {
+          height: 20px;
+          border-radius: 10px;
+          border-width: 1px;
+        }
+
+        .disk.selected {
+          transform: translateY(-10px) scale(1.06);
+        }
+
+        .difficulty-btn {
+          padding: 10px 12px;
+          font-size: 12px;
+          min-height: 44px;
+        }
+
+        .reset-btn {
+          padding: 12px 20px;
+          font-size: 14px;
+          min-height: 44px;
+        }
+
+        .stats {
+          font-size: 14px;
+        }
+
+        .instructions {
+          font-size: 13px;
+          margin-top: 12px;
+        }
+
+        .win-message {
+          font-size: 18px;
+          padding: 20px 15px;
+        }
+
+        .win-stats {
+          font-size: 14px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .game-container {
+          height: 300px;
+          padding: 15px 8px;
+        }
+
+        .rod {
+          width: 75px;
+          min-height: 240px;
         }
 
         .rod-pole {
           height: 160px;
+          width: 5px;
         }
 
         .rod-base {
           width: 60px;
+          height: 12px;
         }
 
         .disk {
           height: 18px;
+          border-radius: 9px;
+        }
+
+        .difficulty-btn {
+          padding: 8px 10px;
+          font-size: 11px;
+          min-height: 40px;
+        }
+
+        .reset-btn {
+          padding: 10px 16px;
+          font-size: 13px;
+          min-height: 40px;
+        }
+      }
+
+      /* Touch feedback animations */
+      @keyframes tapFeedback {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(0.95);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .touch-feedback {
+        animation: tapFeedback 0.2s ease-out;
+      }
+
+      /* High DPI displays */
+      @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        .disk {
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .disk.selected {
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
         }
       }
     </style>
@@ -335,9 +574,9 @@
     </div>
 
     <div class="instructions">
-      <strong>How to Play:</strong> Click a rod to select the top disk, then
-      click another rod to move it. You can only place smaller disks on larger
-      ones. Move all disks from Rod A to Rod C!
+      <strong>How to Play:</strong> Tap a rod to select the top disk, then tap
+      another rod to move it. You can only place smaller disks on larger ones.
+      Move all disks from Rod A to Rod C!
     </div>
 
     <script>
@@ -350,6 +589,10 @@
         selectedRod: null,
         diskCount: 4,
         timer: null,
+        isMobile:
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          ),
       };
 
       // Disk colors for different sizes
@@ -361,6 +604,12 @@
         "linear-gradient(45deg, #6c5ce7, #a29bfe)",
         "linear-gradient(45deg, #fd79a8, #e84393)",
       ];
+
+      // Enhanced touch feedback
+      function addTouchFeedback(element, className = "tap-feedback") {
+        element.classList.add(className);
+        setTimeout(() => element.classList.remove(className), 200);
+      }
 
       // Initialize game with specified number of disks
       function initializeGame(diskCount = 4) {
@@ -382,14 +631,29 @@
         document.getElementById("winMessage").style.display = "none";
       }
 
-      // Calculate disk width based on size
+      // Calculate disk width based on size and screen width
       function getDiskWidth(size, maxSize) {
-        const minWidth = 40;
-        const maxWidth = 100;
+        const screenWidth = window.innerWidth;
+        let minWidth, maxWidth;
+
+        if (screenWidth <= 360) {
+          minWidth = 25;
+          maxWidth = 65;
+        } else if (screenWidth <= 480) {
+          minWidth = 30;
+          maxWidth = 75;
+        } else if (screenWidth <= 768) {
+          minWidth = 35;
+          maxWidth = 85;
+        } else {
+          minWidth = 40;
+          maxWidth = 100;
+        }
+
         return minWidth + (maxWidth - minWidth) * (size / maxSize);
       }
 
-      // Render all disks on rods
+      // Render all disks on rods with enhanced mobile positioning
       function renderDisks() {
         const rods = document.querySelectorAll(".rod");
 
@@ -400,18 +664,51 @@
 
           // Add disks from bottom to top
           const rodDisks = gameState.rods[rodIndex];
+          const diskHeight =
+            window.innerWidth <= 480 ? 20 : window.innerWidth <= 768 ? 22 : 25;
+          const diskSpacing =
+            window.innerWidth <= 480 ? 19 : window.innerWidth <= 768 ? 21 : 27;
+
           rodDisks.forEach((diskSize, diskIndex) => {
             const disk = document.createElement("div");
             disk.className = "disk";
             disk.style.width =
               getDiskWidth(diskSize, gameState.diskCount) + "px";
+            disk.style.height = diskHeight + "px";
             disk.style.background =
               diskColors[(diskSize - 1) % diskColors.length];
             disk.style.position = "absolute";
-            disk.style.bottom = 30 + diskIndex * 27 + "px";
+            disk.style.bottom = 30 + diskIndex * diskSpacing + "px";
             disk.style.left = "50%";
             disk.style.transform = "translateX(-50%)";
             disk.dataset.size = diskSize;
+
+            // Enhanced touch events for mobile
+            if (gameState.isMobile) {
+              disk.addEventListener(
+                "touchstart",
+                (e) => {
+                  e.preventDefault();
+                  addTouchFeedback(disk);
+                },
+                { passive: false }
+              );
+
+              disk.addEventListener(
+                "touchend",
+                (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  // Only handle if this is the top disk
+                  const topDiskIndex = gameState.rods[rodIndex].length - 1;
+                  if (diskIndex === topDiskIndex) {
+                    handleRodClick(rodIndex);
+                  }
+                },
+                { passive: false }
+              );
+            }
 
             rodElement.appendChild(disk);
           });
@@ -457,12 +754,18 @@
         return fromDisk < toDisk;
       }
 
-      // Execute a move
+      // Execute a move with enhanced feedback
       function makeMove(fromRod, toRod) {
         if (!isValidMove(fromRod, toRod)) {
-          // Show invalid move feedback
+          // Enhanced invalid move feedback
           const rodElement = document.querySelector(`[data-rod="${toRod}"]`);
           rodElement.classList.add("invalid-target");
+
+          // Add haptic feedback on mobile
+          if (gameState.isMobile && navigator.vibrate) {
+            navigator.vibrate(100);
+          }
+
           setTimeout(() => rodElement.classList.remove("invalid-target"), 500);
           return false;
         }
@@ -470,6 +773,11 @@
         const disk = gameState.rods[fromRod].pop();
         gameState.rods[toRod].push(disk);
         gameState.moves++;
+
+        // Add success haptic feedback
+        if (gameState.isMobile && navigator.vibrate) {
+          navigator.vibrate(50);
+        }
 
         startTimer();
         updateDisplay();
@@ -494,22 +802,30 @@
         const minMoves = Math.pow(2, gameState.diskCount) - 1;
         const efficiency = Math.round((minMoves / gameState.moves) * 100);
 
+        // Celebration haptic feedback
+        if (gameState.isMobile && navigator.vibrate) {
+          navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+
         document.getElementById("winStats").innerHTML = `
-                Completed in ${gameState.moves} moves (minimum: ${minMoves})<br>
-                Time: ${timeText} | Efficiency: ${efficiency}%
-            `;
+          Completed in ${gameState.moves} moves (minimum: ${minMoves})<br>
+          Time: ${timeText} | Efficiency: ${efficiency}%
+        `;
         document.getElementById("winMessage").style.display = "block";
       }
 
-      // Handle rod selection and moves
+      // Handle rod selection and moves with enhanced touch support
       function handleRodClick(rodIndex) {
         if (gameState.selectedRod === null) {
           // Select rod if it has disks
           if (gameState.rods[rodIndex].length > 0) {
             gameState.selectedRod = rodIndex;
-            document
-              .querySelector(`[data-rod="${rodIndex}"]`)
-              .classList.add("selected");
+            const rodElement = document.querySelector(
+              `[data-rod="${rodIndex}"]`
+            );
+            rodElement.classList.add("selected");
+
+            addTouchFeedback(rodElement);
 
             // Highlight the top disk
             const topDisk = document.querySelector(
@@ -518,6 +834,10 @@
             if (topDisk) topDisk.classList.add("selected");
           }
         } else {
+          // Clear visual feedback first
+          const rodElement = document.querySelector(`[data-rod="${rodIndex}"]`);
+          addTouchFeedback(rodElement);
+
           // Attempt to move disk
           if (rodIndex === gameState.selectedRod) {
             // Deselect if clicking same rod
@@ -542,25 +862,71 @@
         }
       }
 
-      // Set up event listeners
+      // Set up event listeners with enhanced mobile support
       function setupEventListeners() {
-        // Rod click handlers
+        // Rod click/touch handlers
         document.querySelectorAll(".rod").forEach((rod, index) => {
+          // Mouse events for desktop
           rod.addEventListener("click", (e) => {
             e.stopPropagation();
-            handleRodClick(index);
+            if (!gameState.isMobile) {
+              handleRodClick(index);
+            }
           });
+
+          // Enhanced touch events for mobile
+          if (gameState.isMobile) {
+            let touchStartTime;
+            let touchMoved = false;
+
+            rod.addEventListener(
+              "touchstart",
+              (e) => {
+                touchStartTime = Date.now();
+                touchMoved = false;
+                addTouchFeedback(rod);
+              },
+              { passive: true }
+            );
+
+            rod.addEventListener(
+              "touchmove",
+              (e) => {
+                touchMoved = true;
+              },
+              { passive: true }
+            );
+
+            rod.addEventListener(
+              "touchend",
+              (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const touchDuration = Date.now() - touchStartTime;
+
+                // Only register as tap if touch was brief and didn't move
+                if (!touchMoved && touchDuration < 300) {
+                  handleRodClick(index);
+                }
+              },
+              { passive: false }
+            );
+          }
         });
 
-        // Reset button
-        document.getElementById("resetBtn").addEventListener("click", () => {
+        // Enhanced button interactions
+        document.getElementById("resetBtn").addEventListener("click", (e) => {
+          addTouchFeedback(e.target, "touch-feedback");
           initializeGame(gameState.diskCount);
           clearSelection();
         });
 
-        // Difficulty selector
+        // Difficulty selector with enhanced touch feedback
         document.querySelectorAll(".difficulty-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (e) => {
+            addTouchFeedback(e.target, "touch-feedback");
+
             // Update active button
             document
               .querySelectorAll(".difficulty-btn")
@@ -574,15 +940,23 @@
           });
         });
 
-        // Clear selection when clicking outside
+        // Clear selection when clicking/touching outside
         document.addEventListener("click", (e) => {
-          if (!e.target.closest(".rod")) {
+          if (!e.target.closest(".rod") && !gameState.isMobile) {
             clearSelection();
           }
         });
 
-        // Keyboard support
+        document.addEventListener("touchend", (e) => {
+          if (!e.target.closest(".rod") && gameState.isMobile) {
+            clearSelection();
+          }
+        });
+
+        // Keyboard support (desktop only)
         document.addEventListener("keydown", (e) => {
+          if (gameState.isMobile) return;
+
           if (e.key >= "1" && e.key <= "3") {
             const rodIndex = parseInt(e.key) - 1;
             handleRodClick(rodIndex);
@@ -593,10 +967,31 @@
             clearSelection();
           }
         });
+
+        // Handle orientation changes on mobile
+        window.addEventListener("orientationchange", () => {
+          setTimeout(() => {
+            updateDisplay();
+          }, 100);
+        });
+
+        // Handle window resize
+        window.addEventListener("resize", () => {
+          updateDisplay();
+        });
       }
 
       // Initialize the game on page load
       document.addEventListener("DOMContentLoaded", () => {
+        // Prevent zoom on iOS
+        document.addEventListener(
+          "touchmove",
+          (e) => {
+            if (e.scale !== 1) e.preventDefault();
+          },
+          { passive: false }
+        );
+
         initializeGame(4);
         setupEventListeners();
       });
