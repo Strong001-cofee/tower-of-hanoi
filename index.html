@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tower of Hanoi</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        color: white;
+        user-select: none;
+        touch-action: manipulation;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 800px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .stats {
+        font-size: 18px;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .difficulty-selector {
+        display: flex;
+        gap: 5px;
+        margin-right: 10px;
+      }
+
+      .difficulty-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .difficulty-btn.active {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.8);
+        transform: scale(1.05);
+      }
+
+      .difficulty-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      .reset-btn {
+        background: #ff6b6b;
+        border: none;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .reset-btn:hover {
+        background: #ff5252;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .game-container {
+        width: 100%;
+        max-width: 800px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 40px 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .rods-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end;
+        height: 100%;
+        position: relative;
+      }
+
+      .rod {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        width: 120px;
+      }
+
+      .rod.selected {
+        transform: scale(1.05);
+      }
+
+      .rod.invalid-target {
+        animation: shake 0.5s ease-in-out;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+
+      .rod-pole {
+        width: 8px;
+        height: 250px;
+        background: linear-gradient(to bottom, #8b4513, #654321);
+        border-radius: 4px;
+        position: relative;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .rod-base {
+        width: 100px;
+        height: 20px;
+        background: linear-gradient(to bottom, #8b4513, #654321);
+        border-radius: 10px;
+        margin-top: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .rod-label {
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .disk {
+        height: 25px;
+        border-radius: 12px;
+        margin-bottom: 2px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 10;
+      }
+
+      .disk.selected {
+        transform: translateY(-10px) scale(1.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        z-index: 100;
+      }
+
+      .disk:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      }
+
+      .win-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        display: none;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      }
+
+      .win-stats {
+        margin: 15px 0;
+        font-size: 18px;
+        color: #ffd700;
+      }
+
+      .instructions {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.8);
+        max-width: 600px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 768px) {
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .game-container {
+          height: 350px;
+          padding: 30px 15px;
+        }
+
+        .rod {
+          width: 90px;
+        }
+
+        .rod-pole {
+          height: 200px;
+          width: 6px;
+        }
+
+        .rod-base {
+          width: 80px;
+          height: 15px;
+        }
+
+        .disk {
+          height: 20px;
+        }
+
+        .stats {
+          font-size: 16px;
+        }
+
+        .instructions {
+          font-size: 14px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .game-container {
+          height: 300px;
+          padding: 20px 10px;
+        }
+
+        .rod {
+          width: 70px;
+        }
+
+        .rod-pole {
+          height: 160px;
+        }
+
+        .rod-base {
+          width: 60px;
+        }
+
+        .disk {
+          height: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="stats">
+        <div id="moveCounter">Moves: 0</div>
+      </div>
+      <div class="controls">
+        <div class="difficulty-selector">
+          <button class="difficulty-btn" data-disks="3">Easy (3)</button>
+          <button class="difficulty-btn active" data-disks="4">
+            Medium (4)
+          </button>
+          <button class="difficulty-btn" data-disks="5">Hard (5)</button>
+        </div>
+        <button class="reset-btn" id="resetBtn">New Game</button>
+      </div>
+      <div class="stats">
+        <div id="timer">Time: 00:00</div>
+      </div>
+    </div>
+
+    <div class="game-container">
+      <div class="rods-container" id="rodsContainer">
+        <div class="rod" data-rod="0">
+          <div class="rod-pole"></div>
+          <div class="rod-base"></div>
+          <div class="rod-label">A</div>
+        </div>
+        <div class="rod" data-rod="1">
+          <div class="rod-pole"></div>
+          <div class="rod-base"></div>
+          <div class="rod-label">B</div>
+        </div>
+        <div class="rod" data-rod="2">
+          <div class="rod-pole"></div>
+          <div class="rod-base"></div>
+          <div class="rod-label">C</div>
+        </div>
+      </div>
+
+      <div class="win-message" id="winMessage">
+        <div>🎉 Congratulations! 🎉</div>
+        <div class="win-stats" id="winStats"></div>
+        <div>Click "New Game" to play again!</div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <strong>How to Play:</strong> Click a rod to select the top disk, then
+      click another rod to move it. You can only place smaller disks on larger
+      ones. Move all disks from Rod A to Rod C!
+    </div>
+
+    <script>
+      // Game state container
+      const gameState = {
+        rods: [[], [], []],
+        moves: 0,
+        startTime: null,
+        gameActive: false,
+        selectedRod: null,
+        diskCount: 4,
+        timer: null,
+      };
+
+      // Disk colors for different sizes
+      const diskColors = [
+        "linear-gradient(45deg, #ff6b6b, #ee5a52)",
+        "linear-gradient(45deg, #4ecdc4, #44a08d)",
+        "linear-gradient(45deg, #45b7d1, #3498db)",
+        "linear-gradient(45deg, #f9ca24, #f0932b)",
+        "linear-gradient(45deg, #6c5ce7, #a29bfe)",
+        "linear-gradient(45deg, #fd79a8, #e84393)",
+      ];
+
+      // Initialize game with specified number of disks
+      function initializeGame(diskCount = 4) {
+        gameState.diskCount = diskCount;
+        gameState.rods = [[], [], []];
+        gameState.moves = 0;
+        gameState.startTime = null;
+        gameState.gameActive = false;
+        gameState.selectedRod = null;
+
+        // Create disks on first rod (largest to smallest)
+        for (let i = diskCount; i >= 1; i--) {
+          gameState.rods[0].push(i);
+        }
+
+        updateDisplay();
+        clearInterval(gameState.timer);
+        document.getElementById("timer").textContent = "Time: 00:00";
+        document.getElementById("winMessage").style.display = "none";
+      }
+
+      // Calculate disk width based on size
+      function getDiskWidth(size, maxSize) {
+        const minWidth = 40;
+        const maxWidth = 100;
+        return minWidth + (maxWidth - minWidth) * (size / maxSize);
+      }
+
+      // Render all disks on rods
+      function renderDisks() {
+        const rods = document.querySelectorAll(".rod");
+
+        rods.forEach((rodElement, rodIndex) => {
+          // Remove existing disks
+          const existingDisks = rodElement.querySelectorAll(".disk");
+          existingDisks.forEach((disk) => disk.remove());
+
+          // Add disks from bottom to top
+          const rodDisks = gameState.rods[rodIndex];
+          rodDisks.forEach((diskSize, diskIndex) => {
+            const disk = document.createElement("div");
+            disk.className = "disk";
+            disk.style.width =
+              getDiskWidth(diskSize, gameState.diskCount) + "px";
+            disk.style.background =
+              diskColors[(diskSize - 1) % diskColors.length];
+            disk.style.position = "absolute";
+            disk.style.bottom = 30 + diskIndex * 27 + "px";
+            disk.style.left = "50%";
+            disk.style.transform = "translateX(-50%)";
+            disk.dataset.size = diskSize;
+
+            rodElement.appendChild(disk);
+          });
+        });
+      }
+
+      // Update move counter and timer display
+      function updateDisplay() {
+        document.getElementById(
+          "moveCounter"
+        ).textContent = `Moves: ${gameState.moves}`;
+        renderDisks();
+      }
+
+      // Start the game timer
+      function startTimer() {
+        if (!gameState.startTime) {
+          gameState.startTime = Date.now();
+          gameState.timer = setInterval(() => {
+            const elapsed = Math.floor(
+              (Date.now() - gameState.startTime) / 1000
+            );
+            const minutes = Math.floor(elapsed / 60)
+              .toString()
+              .padStart(2, "0");
+            const seconds = (elapsed % 60).toString().padStart(2, "0");
+            document.getElementById(
+              "timer"
+            ).textContent = `Time: ${minutes}:${seconds}`;
+          }, 1000);
+        }
+      }
+
+      // Check if move is valid
+      function isValidMove(fromRod, toRod) {
+        if (gameState.rods[fromRod].length === 0) return false;
+        if (gameState.rods[toRod].length === 0) return true;
+
+        const fromDisk =
+          gameState.rods[fromRod][gameState.rods[fromRod].length - 1];
+        const toDisk = gameState.rods[toRod][gameState.rods[toRod].length - 1];
+
+        return fromDisk < toDisk;
+      }
+
+      // Execute a move
+      function makeMove(fromRod, toRod) {
+        if (!isValidMove(fromRod, toRod)) {
+          // Show invalid move feedback
+          const rodElement = document.querySelector(`[data-rod="${toRod}"]`);
+          rodElement.classList.add("invalid-target");
+          setTimeout(() => rodElement.classList.remove("invalid-target"), 500);
+          return false;
+        }
+
+        const disk = gameState.rods[fromRod].pop();
+        gameState.rods[toRod].push(disk);
+        gameState.moves++;
+
+        startTimer();
+        updateDisplay();
+
+        // Check for win condition
+        if (gameState.rods[2].length === gameState.diskCount) {
+          setTimeout(showWinMessage, 300);
+        }
+
+        return true;
+      }
+
+      // Display win message
+      function showWinMessage() {
+        clearInterval(gameState.timer);
+        const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        const timeText =
+          minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+        const minMoves = Math.pow(2, gameState.diskCount) - 1;
+        const efficiency = Math.round((minMoves / gameState.moves) * 100);
+
+        document.getElementById("winStats").innerHTML = `
+                Completed in ${gameState.moves} moves (minimum: ${minMoves})<br>
+                Time: ${timeText} | Efficiency: ${efficiency}%
+            `;
+        document.getElementById("winMessage").style.display = "block";
+      }
+
+      // Handle rod selection and moves
+      function handleRodClick(rodIndex) {
+        if (gameState.selectedRod === null) {
+          // Select rod if it has disks
+          if (gameState.rods[rodIndex].length > 0) {
+            gameState.selectedRod = rodIndex;
+            document
+              .querySelector(`[data-rod="${rodIndex}"]`)
+              .classList.add("selected");
+
+            // Highlight the top disk
+            const topDisk = document.querySelector(
+              `[data-rod="${rodIndex}"] .disk:last-child`
+            );
+            if (topDisk) topDisk.classList.add("selected");
+          }
+        } else {
+          // Attempt to move disk
+          if (rodIndex === gameState.selectedRod) {
+            // Deselect if clicking same rod
+            clearSelection();
+          } else {
+            // Try to make the move
+            makeMove(gameState.selectedRod, rodIndex);
+            clearSelection();
+          }
+        }
+      }
+
+      // Clear current selection
+      function clearSelection() {
+        if (gameState.selectedRod !== null) {
+          document
+            .querySelector(`[data-rod="${gameState.selectedRod}"]`)
+            .classList.remove("selected");
+          const selectedDisk = document.querySelector(".disk.selected");
+          if (selectedDisk) selectedDisk.classList.remove("selected");
+          gameState.selectedRod = null;
+        }
+      }
+
+      // Set up event listeners
+      function setupEventListeners() {
+        // Rod click handlers
+        document.querySelectorAll(".rod").forEach((rod, index) => {
+          rod.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleRodClick(index);
+          });
+        });
+
+        // Reset button
+        document.getElementById("resetBtn").addEventListener("click", () => {
+          initializeGame(gameState.diskCount);
+          clearSelection();
+        });
+
+        // Difficulty selector
+        document.querySelectorAll(".difficulty-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            // Update active button
+            document
+              .querySelectorAll(".difficulty-btn")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            // Start new game with selected difficulty
+            const diskCount = parseInt(btn.dataset.disks);
+            initializeGame(diskCount);
+            clearSelection();
+          });
+        });
+
+        // Clear selection when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".rod")) {
+            clearSelection();
+          }
+        });
+
+        // Keyboard support
+        document.addEventListener("keydown", (e) => {
+          if (e.key >= "1" && e.key <= "3") {
+            const rodIndex = parseInt(e.key) - 1;
+            handleRodClick(rodIndex);
+          } else if (e.key === "Escape") {
+            clearSelection();
+          } else if (e.key === "r" || e.key === "R") {
+            initializeGame(gameState.diskCount);
+            clearSelection();
+          }
+        });
+      }
+
+      // Initialize the game on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        initializeGame(4);
+        setupEventListeners();
+      });
+    </script>
+  </body>
+</html>
