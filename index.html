@@ -148,6 +148,13 @@
         width: clamp(60px, 15vw, 120px);
         flex: 1;
         max-width: 150px;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        outline: none;
       }
 
       .rod.selected {
@@ -155,8 +162,22 @@
         filter: brightness(1.1);
       }
 
+      .rod.selected .rod-pole {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.4),
+          inset 2px 0 4px rgba(255, 255, 255, 0.2);
+      }
+
+      .rod.selected .rod-base {
+        box-shadow: 0 4px 25px rgba(255, 255, 255, 0.3);
+      }
+
       .rod:hover {
         transform: translateY(-2px);
+      }
+
+      .rod:hover .rod-pole {
+        box-shadow: 0 0 18px rgba(255, 255, 255, 0.2),
+          inset 2px 0 4px rgba(255, 255, 255, 0.15);
       }
 
       .rod.invalid-target {
@@ -221,7 +242,7 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.15);
         position: relative;
-        z-index: 10;
+        z-index: 20;
         will-change: transform;
       }
 
